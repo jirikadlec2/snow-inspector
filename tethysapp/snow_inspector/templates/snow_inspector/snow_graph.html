@@ -14,11 +14,17 @@
   <link rel="stylesheet" href="{% static 'snow_inspector/vendor/openlayers/v3.3.0/ol.css' %}" type="text/css" />
 {% endblock %}
 
-{% block app_navigation_items %} 
-	<li><button type="button" class="btn btn-default">
+{% block app_navigation_items %}
+
+<!--    Change the button type. Clicking within the button outside the text did nothing.
+<li><button type="button" class="btn btn-default">
         <a href="{% url 'snow_inspector:home' %}{{map_url}}">Change Snow Location</a>
         </button>
-    </li>
+    </li> -->
+
+    <a class="btn btn-default" href="{% url 'snow_inspector:home' %}{{map_url}}">Change Snow Location</a>
+<!-- End of changes -->
+
     <p></p>
     <div id="detail-map"></div>
 {% endblock %}
