@@ -1,7 +1,5 @@
 from django.shortcuts import render
-from django.http import JsonResponse
-
-import json
+from tethys_sdk.gizmos import DatePicker
 import datetime
 
 def map(request):
@@ -10,15 +8,14 @@ def map(request):
     """
     
     #configure the date picker
-    today = datetime.date.today()
-    date_picker = {'display_text': 'Date',
-        'name': 'endDate',
-        'autoclose': True,
-        'format': 'yyyy-mm-dd',
-        'start_date': '2013-01-01',
-        'today_button': True,
-        'initial': datetime.datetime.today().strftime("%Y-%m-%d")
-    }
+    date_picker = DatePicker(display_text='Date',
+                            name= 'endDate',
+                            autoclose= True,
+                            format= 'yyyy-mm-dd',
+                            start_date= '2013-01-01',
+                            today_button= True,
+                            initial= datetime.datetime.today().strftime("%Y-%m-%d")
+                            )
 
     days_picker = {'display_text': 'Number of days:',
               'name': 'inputDays',

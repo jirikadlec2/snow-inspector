@@ -1,5 +1,4 @@
 from tethys_apps.base import TethysAppBase, url_map_maker
-from tethys_apps.base import PersistentStore
 
 
 class SnowInspector(TethysAppBase):
@@ -45,14 +44,3 @@ class SnowInspector(TethysAppBase):
         )
 
         return url_maps
-
-
-    def persistent_stores(self):
-        """
-        Add one or more persistent stores
-        """
-        stores = (PersistentStore(name='snow_inspector_db',
-                                  initializer='init_stores:init_snow_inspector_db',
-                                  spatial=True),
-        )
-        return stores
