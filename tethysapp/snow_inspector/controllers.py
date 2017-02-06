@@ -1,118 +1,19 @@
-
-import json
 import datetime
-import sys
 import tempfile
 import shutil
 import os
 import traceback
-import urllib
+import requests
 
-from django.shortcuts import render
-from django.http import JsonResponse
-from django.core.urlresolvers import reverse
-from tethys_gizmos.gizmo_options import MapView, MVLayer, MVView
-
-# Migrating app to Tethys 1.4; tethys_apps.sdk deprecated.
-# from tethys_apps.sdk.gizmos import Button, TextInput, SelectInput
-from tethys_sdk.gizmos import Button, TextInput, SelectInput
-# End of changes
-
-from hs_restclient import HydroShare, HydroShareAuthBasic
 from oauthlib.oauth2 import TokenExpiredError
-from hs_restclient import HydroShare, HydroShareAuthOAuth2, HydroShareNotAuthorized, HydroShareNotFound
+from hs_restclient import HydroShare, HydroShareAuthOAuth2
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import JsonResponse
 from django.shortcuts import render
-from django.contrib.auth.decorators import login_required
 from django.conf import settings
 
 
 hs_hostname = "www.hydroshare.org"
-
-
-def home(request):
-    """
-    Controller for the app home page.
-    """
-    context = {}
-
-    return render(request, 'snow_inspector/home.html', context)
-
-def map(request):
-    """
-    Controller for map page.
-    """
-
-    # If we received the input from the graph page:
-    if request.GET:
-        print 'request.GET!'
-        lat = request.GET['lat']
-        lon = request.GET['lon']
-        endDate = request.GET['end']
-        today = endDate.strptime('%Y-%m-%d')
-    else:
-        # Create a session
-        session = SessionMaker()
-
-        # Query DB for gage object
-        id = 1
-        site = session.query(SnowSite).filter(SnowSite. id ==id).one()
-        lat = site.latitude
-        lon = site.longitude
-        today = datetime.date.today()
-
-    # Transform into GeoJSON format
-    geometries = []
-
-    site_geometry = dict(type="Point",
-                         coordinates=[lat, lon],
-                         properties={"value" :site.value})
-    geometries.append(site_geometry)
-
-    geojson_sites = {"type": "GeometryCollection",
-                     "geometries": geometries}
-
-    # configure the map
-    map_options = {'height': '500px',
-                   'width': '100%',
-                   'input_overlays': geojson_sites}
-
-    # configure the date picker
-
-    date_picker = {'display_text': 'Date',
-                   'name': 'endDate',
-                   'autoclose': True,
-                   'format': 'MM d, yyyy',
-                   'start_date': '1/1/2013',
-                   'today_button': True,
-                   'initial': today.strftime('%m/%d/%Y')
-                   }
-
-    days_picker = {'display_text': 'Number of days:',
-                   'name': 'inputDays'
-                   }
-
-    # Pre-populate lat-picker and lon_picker from model
-    lat_picker = {'display_text': 'Latitude:',
-                  'name': 'inputLat',
-                  'placeholder': lat}
-
-    lon_picker = {'display_text': 'Longitude:',
-                  'name': 'inputLon',
-                  'placeholder': lon}
-
-
-    # Pass variables to the template via the context dictionary
-    context = {'map_options': map_options,
-               'date_picker' :date_picker,
-               'days_picker' :days_picker,
-               'lon_picker' :lon_picker,
-               'lat_picker' :lat_picker,
-               'basemap_picker' :map_picker}
-
-    return render(request, 'snow_inspector/map.html', context)
-
 
 def snow_graph(request):
     """
@@ -191,7 +92,9 @@ def upload_to_hydroshare(request):
             waterml_file_path = os.path.join(temp_dir, "snow.wml")
             print waterml_file_path
 
-            urllib.urlretrieve(waterml_url, waterml_file_path)
+            with open(waterml_file_path, 'w') as f:
+                resp = requests.get(waterml_url, verify=False)
+                f.write(resp.content)
 
             # upload the temp file to HydroShare
             if os.path.exists(waterml_file_path):

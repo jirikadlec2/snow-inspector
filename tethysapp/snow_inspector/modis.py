@@ -1,23 +1,10 @@
-import tempfile
-import shutil
-import os
-import traceback
-import json
 import math
 import datetime
 import png
 import urllib2
 
-from hs_restclient import HydroShare, HydroShareAuthBasic
-from oauthlib.oauth2 import TokenExpiredError
-from hs_restclient import HydroShare, HydroShareAuthOAuth2, HydroShareNotAuthorized, HydroShareNotFound
-from django.core.exceptions import ObjectDoesNotExist
 from django.http import JsonResponse
-from django.shortcuts import render
 from django.shortcuts import render_to_response
-from django.contrib.auth.decorators import login_required
-from django.conf import settings
-
 
 
 """
