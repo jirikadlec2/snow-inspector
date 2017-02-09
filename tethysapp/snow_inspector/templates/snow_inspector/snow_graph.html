@@ -22,11 +22,14 @@
         </button>
     </li> -->
 
-    <a class="btn btn-default" href="{% url 'snow_inspector:home' %}{{map_url}}">Change Snow Location</a>
+    <a class="btn btn-default" href="{% url 'snow_inspector:home' %}{{map_url}}">Change Snow Dates & Location</a>
 <!-- End of changes -->
 
     <p></p>
+    
     <div id="detail-map"></div>
+    <p>Estimated percent snow coverage per cell (MODIS pixel)</p>
+    
 {% endblock %}
 
 {% block app_content %}
@@ -35,7 +38,7 @@
 
   <div id="snow-chart"></div>
 
-  <p id="chart-label">Estimated percent snow coverage per cell (MODIS pixel)</p>
+  <p id="chart-label">Date</p>
 {% endblock %}
 
 {% block app_actions %}

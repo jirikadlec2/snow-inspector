@@ -21,6 +21,10 @@ def deg2num(lat_deg, lon_deg, zoom):
     ytilef = (1.0 - math.log(math.tan(lat_rad) + (1 / math.cos(lat_rad))) / math.pi) / 2.0 * n
     ytile = int(ytilef)
     ypixel = int((ytilef -float(ytile)) * tileSize)
+    # print 'xpixel:'
+    # print xpixel
+    # print 'ypixel:'
+    # print ypixel
     return (xtile, ytile, xpixel, ypixel)
     
 
@@ -51,9 +55,8 @@ def getTimeSeries(lat, lon, beginDate, endDate):
     ts = []
     for d in datelist:        
         url = getTileURL(xtile, ytile, zoom, d)
-        snow_val = getImage(url, ypixel, xpixel)
-        if snow_val > 100:
-            snow_val = None
+        pixel_val = getImage(url, ypixel, xpixel)
+        snow_val = pixelValueToSnowPercent(pixel_val, d)
         ts.append(snow_val)
     return ts
 
@@ -65,12 +68,41 @@ def getTimeSeries2(lat, lon, beginDate, endDate, zoom):
     ts = []
     for d in datelist:        
         url = getTileURL(xtile, ytile, zoom, d)
-        snow_val = getImage(url, ypixel, xpixel)
-        if snow_val > 100:
-            snow_val = None
-        ts.append(snow_val)
+        pixel_val = getImage(url, ypixel, xpixel)
+        snow_percent = pixelValueToSnowPercent(pixel_val, d)
+        ts.append(snow_percent)
     return ts
 
+def pixelValueToSnowPercent(pixel_val, image_date):
+    # the GIBS imagery service uses an "indexed image" png format.
+    # each pixel has an index (between 0 and 255)
+    # the built-in PNG color table is then used to convert each index to 
+    # the displayed (r,g,b) color.
+    # NOTICE: there was a change of the modis GIBS image legend color table.
+    #before 2016-04-27 the image pixel value was equal to %snow in pixel and 
+    # values > 100 indicated cloud cover.
+    #after  2016-04-28 the image pixel value is between 1 and 9 for snow-covered
+    # pixels, where 9% ... 90-100% coverage, 8 ... 80-90% coverage, 1 ... 10-20% coverage
+    # and 16 ... cloud, 22 ... bare ground
+    legend_change_date = datetime.datetime(2016,4,27)
+    
+    snow_val = pixel_val
+    if image_date < legend_change_date:
+        if snow_val > 100:
+            snow_val = None
+    else:
+        if snow_val == 22:
+            # ground without snow
+            snow_val = 0
+        elif snow_val > 15:
+            # cloud cover or other value
+            snow_val = None
+        else:
+            # convert 1-9 categories to % snow
+            # use upper bound of each category
+            snow_val = (snow_val * 10) + 10
+    return snow_val
+    
 
 def xCoordinateToLongitude(x, zoom):
     return float(x) / (2.0 ** zoom) * 360.0 - 180.0
@@ -89,10 +121,12 @@ def tileBoundsLonLat(x, y, zoom):
     return (xMin, yMin, xMax, yMax)
     
 def getImage(url, rowpixel, colpixel):
+    # print url
     r = png.Reader(file=urllib2.urlopen(url))
     w, h, pixels, metadata = r.read()
     pxlist = list(pixels)
-    return pxlist[rowpixel][colpixel]
+    v = pxlist[rowpixel][colpixel]
+    return v
 
 def getImageVals(url):
     r = png.Reader(file=urllib2.urlopen(url))
@@ -208,7 +242,7 @@ def get_data_json(request):
     tile = getTileURLTemplate(xtile, ytile, zoom)
 
     ts = getTimeSeries(lat, lon, startdate, enddate)
-    return JsonResponse({"query":context, "tile":tile, "data":ts})
+    return JsonResponse({"query":context, "tile":tile, "xpixel":xpixel, "ypixel":ypixel, "data":ts})
 
 
 def get_data_waterml(request):
@@ -285,15 +319,8 @@ def getTilesInView(lonmin, latmin, lonmax, latmax, tileDate):
     tileMinCol = tile_ul['xTile']
     tileMaxCol = tile_ur['xTile']
 
-    print tileMinRow
-    print tileMaxRow
-    print tileMinCol
-    print tileMaxCol
-
     nTileCols = tileMaxCol - tileMinCol + 1
     nTileRows = tileMaxRow - tileMinRow + 1
-    print nTileRows
-    print nTileCols
 
     for tileRow in range(tileMinRow, tileMaxRow + 1):
         for tileCol in range(tileMinCol, tileMaxCol + 1):
@@ -361,7 +388,6 @@ def get_pixel_borders2(request):
         #json feature list
         featureList = {"type":"FeatureCollection", "features":[]}
 
-
         #for each tile...
         for tile in tiles:
             bigTileLon = xCoordinateToLongitude(tile["xTile"], 8)
@@ -376,33 +402,34 @@ def get_pixel_borders2(request):
                     tileId = tileId + 1
                     pixelVal = vals[i][j]
 
+                    snowVal = pixelValueToSnowPercent(pixelVal, tileDate)
+
                     # special value for cloud..
 
-                    if pixelVal > 100:
-                        pixelVal = "C"
+                    if snowVal is None:
+                        snowVal = "C"
 
                     minX, minY, maxX, maxY = tileBoundsLonLat(tileX, tileY, 16)
-                    pixel = {"id": tileId, "pixelval": pixelVal, "minX": minX, "minY": minY, "maxX": maxX, "maxY": maxY}
+                    pixel = {"id": tileId, "pixelval": snowVal, "minX": minX, "minY": minY, "maxX": maxX, "maxY": maxY}
                     boundaryList.append(pixel)
 
                     newF = {
                         "type": "Feature",
                         "properties": {
                             "id": tileId,
-                            "val": pixelVal
+                            "val": snowVal
                         },
                         "geometry": {
                             "type": "Polygon",
                             "coordinates": [[
-                                [minX, minY], [maxX, minY], [maxX, maxY], [minX, maxY], [minX, minY]
+                                [minX, minY], 
+                                [maxX, minY], 
+                                [maxX, maxY], 
+                                [minX, maxY], 
+                                [minX, minY]
                             ]]
                         }
                     }
                     featureList["features"].append(newF)
 
         return JsonResponse(featureList)
-
-        #context = {'boundaries':boundaryList}
-        #geojsonResponse = render_to_response('snow_inspector/geojson.json', context)
-        #geojsonResponse['Content-Type'] = 'application/json;'
-        #return geojsonResponse

@@ -6,6 +6,11 @@ When you select the location on the map, you can display the daily time series. 
 
 No data means that the location was covered by cloud on the given day and the snow coverage is unknown.
 
-Planned Functionality:
+# Data Sources:
 
-Show time series of snow coverage from MODIS web map tiles
+We acknowledge the use of imagery provided by services from the NASA Global Imagery Browse Service (GIBS), operated by the NASA/GSFC/Earth Science Data and Information System (ESDIS, https://earthdata.nasa.gov) with funding provided by NASA/HQ.
+Note: The GIBS web service data uses
+the MODIS/Terra MOD10_L3 swath daily fractional snow cover dataset.
+
+# Changes in version 0.0.2:
+Mouse-over a time series data point also shows the original GIBS image and the selected pixel location.

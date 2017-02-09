@@ -55,11 +55,13 @@ function add_data_to_chart2(response_data, myChart) {
 	}  
 }
 
-function set_chart_tooltip(myChart, tile_url) {
+function set_chart_tooltip(myChart, tile_url, xpixel, ypixel) {
 	myChart.tooltip.options.formatter = function() {
 		x_date = (new Date(this.x)).toISOString().substring(0, 10);
 		var url = tile_url.replace("DATE_PLACEHOLDER", x_date);
-		var html = '<p>original data: ' + x_date + ' snow: ' + this.y + '%</p><img width="256px" height="256px" src="' + url + '" />';	
+		var html = '<p>original data: ' + x_date + ' snow: ' + this.y + '%</p><div class="img-container" style="position: relative"><img width="256px" height="256px" style="border:1px solid #000000" src="' + url + '" /><p style="position: absolute; left: ' +
+xpixel +'px; top: ' + ypixel +'px; color: #000000; font-weight:bold">X</p></div>';
+                //console.log(html);	
 		return html;	
 	}
 }
@@ -116,7 +118,8 @@ function update_chart(lat, lon, begin, end) {
 			success: function(response_data){
 
 				if (iRequest === 0) {
-					set_chart_tooltip(chart, response_data.tile)
+					set_chart_tooltip(chart, response_data.tile,
+                                          response_data.xpixel,response_data.ypixel);
 				}
 
 				add_data_to_chart2(response_data, chart);
@@ -355,6 +358,9 @@ $(document).ready(function () {
 		legend: {
 			enabled: false
 		},
+                tooltip: {
+                    useHTML: true
+                },
 		plotOptions: {
 			series: {
 				cursor: 'pointer',

@@ -1,0 +1,10 @@
+Metadata-Version: 1.0
+Name: tethysapp-snow-inspector
+Version: 0.0.1
+Summary: Show graph of snow cover probability from MODIS sensor for selected location
+Home-page: http://worldwater.byu.edu
+Author: Jiri Kadlec
+Author-email: jirikadlec2@gmail.com
+License: MIT
+Description: UNKNOWN
+Platform: UNKNOWN

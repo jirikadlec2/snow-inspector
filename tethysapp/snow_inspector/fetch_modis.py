@@ -39,8 +39,37 @@ def getTileURL(xtile, ytile, zoom, date):
     time = date.strftime("%Y-%m-%d")
     zoom = 8
     return baseURL.format(layer, time, tileMatrix, zoom, ytile, xtile)
+
     
-        
+def pixelValueToSnowPercent(pixel_val, image_date):
+    # the GIBS imagery service uses an "indexed image" png format.
+    # each pixel has an index (between 0 and 255)
+    # the built-in PNG color table is then used to convert each index to 
+    # the displayed (r,g,b) color.
+    # NOTICE: there was a change of the modis GIBS image legend color table.
+    #before 2016-04-27 the image pixel value was equal to %snow in pixel and 
+    # values > 100 indicated cloud cover.
+    #after  2016-04-28 the image pixel value is between 1 and 9 for snow-covered
+    # pixels, where 9% ... 90-100% coverage, 8 ... 80-90% coverage, 1 ... 10-20% coverage
+    # and 16 ... cloud, 22 ... bare ground
+    legend_change_date = datetime.datetime(2016,4,27)
+    
+    snow_val = pixel_val
+    if image_date < legend_change_date:
+        if snow_val > 100:
+            snow_val = None
+    else:
+        if snow_val == 22:
+            # ground without snow
+            snow_val = 0
+        elif snow_val == 16:
+            # cloud cover
+            snow_val = None
+        else:
+            # convert 1-9 categories to % snow
+            # use upper bound of each category
+            snow_val = (snow_val * 10) + 10
+    return snow_val        
 
     
 def getTimeSeries(lat, lon, beginDate, endDate):
@@ -51,8 +80,9 @@ def getTimeSeries(lat, lon, beginDate, endDate):
     for d in datelist:        
         url = getTileURL(xtile, ytile, zoom, d)
         print url
-        snow_val = getImage(url, ypixel, xpixel)
-        if snow_val > 100:
+        pixel_val = getImage(url, ypixel, xpixel)
+	snow_val = pixelValueToSnowPercent(pixel_val, d)
+        if snow_val is None:
             snow_val = np.nan
         ts.append(snow_val)
     return ts

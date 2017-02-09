@@ -4,3 +4,4 @@
 *.html~
 .idea/*
 .build/*
+.tethysapp_snow_inspector.egg-info/*

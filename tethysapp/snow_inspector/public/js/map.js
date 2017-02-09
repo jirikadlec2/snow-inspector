@@ -192,11 +192,6 @@ $(document).ready(function () {
 			mapQuest_layer.setVisible(false);
 			openstreet_layer.setVisible(false);
 			bing_layer.setVisible(true);
-		} else if (selected_value == "mapquest") {
-			esri_layer.setVisible(false);
-			openstreet_layer.setVisible(false);
-			bing_layer.setVisible(false);
-			mapQuest_layer.setVisible(true);
 		} else if(selected_value=="osm") {
 			esri_layer.setVisible(false);
 			bing_layer.setVisible(false);

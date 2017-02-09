@@ -14,7 +14,7 @@ dependencies = ['pypng','hs-restclient']
 
 setup(
     name=release_package,
-    version='0.0.1',
+    version='0.0.2',
     description='Show graph of snow cover probability from MODIS sensor for selected location',
     long_description='',
     keywords='',
