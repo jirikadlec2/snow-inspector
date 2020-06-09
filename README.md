@@ -14,3 +14,6 @@ the MODIS/Terra MOD10_L3 swath daily fractional snow cover dataset.
 
 # Changes in version 0.0.2:
 Mouse-over a time series data point also shows the original GIBS image and the selected pixel location.
+
+# The latest version of this code is on the BYU Hydroinformatics lab GitHub here: 
+https://github.com/BYU-Hydroinformatics/snow-inspector
